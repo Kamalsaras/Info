@@ -1,0 +1,166 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Function to make a frame draggable
+local function makeDraggable(frame)
+    local dragToggle = nil
+    local dragInput = nil
+    local dragStart = nil
+    local startPos = nil
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragToggle = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragToggle then
+            update(input)
+        end
+    end)
+end
+
+-- Function to create the info UI
+local function createInfoUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "InfoUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.6, 0, 0.6, 0)
+    frame.Position = UDim2.new(0.2, 0, 0.2, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.BackgroundTransparency = 0.2
+    frame.ZIndex = 1 -- Ensure it's above other UI elements
+    frame.Parent = screenGui
+
+    makeDraggable(frame)
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Size = UDim2.new(0, 40, 0, 30) -- Small-to-medium size
+    closeButton.Position = UDim2.new(1, -50, 0, 10) -- Positioned more upwards
+    closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.TextScaled = true
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.ZIndex = 2 -- Ensure it's above the frame
+    closeButton.Parent = frame
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    local titleFrame = Instance.new("Frame")
+    titleFrame.Size = UDim2.new(1, 0, 0.1, 0)
+    titleFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    titleFrame.ZIndex = 1
+    titleFrame.Parent = frame
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 1, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "Information Tab"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.ZIndex = 1
+    title.Parent = titleFrame
+
+    local scrollingFrame = Instance.new("ScrollingFrame")
+    scrollingFrame.Size = UDim2.new(1, 0, 0.9, 0)
+    scrollingFrame.Position = UDim2.new(0, 0, 0.1, 0)
+    scrollingFrame.BackgroundTransparency = 1
+    scrollingFrame.BorderSizePixel = 0
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 5, 0)
+    scrollingFrame.ScrollBarThickness = 10
+    scrollingFrame.ZIndex = 1
+    scrollingFrame.Parent = frame
+
+    local function addArticle(text)
+        local article = Instance.new("TextLabel")
+        article.Size = UDim2.new(1, -20, 0, 50)
+        article.Position = UDim2.new(0, 10, 0, (#scrollingFrame:GetChildren() - 1) * 60)
+        article.BackgroundTransparency = 1
+        article.Text = text
+        article.TextColor3 = Color3.fromRGB(255, 255, 255)
+        article.TextScaled = true
+        article.TextWrapped = true
+        article.Font = Enum.Font.Gotham
+        article.ZIndex = 1
+        article.Parent = scrollingFrame
+    end
+
+    addArticle(";openmenu - Opens a menu bar with command list and more information about the script.\n;closemenu - Closes the opened menu.")
+    addArticle(";tp username - Teleports to a specific player. Type ;tp username in the chat. You don't need to type the full name of the player, partial names are accepted.\n;showplayers - Shows a list of players that you can teleport to when clicked.")
+    addArticle(";execute - Opens an execution tab for executing Lua local scripts.")
+    addArticle(";stats - Opens a menu where players can edit their stats like speed, jump, and health.")
+    addArticle(";info - Opens an information tab about each command.")
+    addArticle(";fly (PC) - Allows the user to fly freely. For now, it only works on PC.\n;unfly - Disables flight.\n;fly mobile - Coming in the next update.")
+    addArticle(";serverage - Tells the age of the server after the player has joined.")
+    addArticle(";esp - Highlights everyone in the game, showing their role and name.\n;esp off - Turns off ESP.")
+    addArticle(";bring username - Brings a specific player to you.\n;brall - Brings everyone to you.\n;reset - Returns brought players to their original positions.")
+    addArticle(";jumpboost - Gives additional jump power.")
+    addArticle(";bridge - Generates a platform below the player whenever they jump.\n;bridgeclear - Clears the generated platforms.")
+    addArticle(";lookitem - Looks for an item in the game and shows who has it in a UI. For example: ;lookitem Gun.\n;checkinv username - Shows what items a specific player has in their inventory.")
+    addArticle(";flashstep on - Teleports the player wherever they click.\n;flashstep off - Stops the action.")
+    addArticle(";object esp - Highlights every object in the game with names.")
+    addArticle(";wall on - Allows the user to walk through a specific object. Click on an object to turn it red, click again to turn it green. Players can walk through if it's green.\n;wall off - Turns off walk-through mode.")
+    addArticle(";spectate username - Allows spectating a specific user.\n;spectate end - Ends spectating.")
+    addArticle(";clone username - Clones the target. The clone will be spawned next to the target.")
+    addArticle(";set point - Sets a point to be teleported to.\n;teleport to point - Teleports to the point.")
+    addArticle(";walkthrough - Makes every object in the game walk-through.\n;walkthrough off - Sets all objects back to default.")
+    addArticle(";teleport - Opens a UI where players can enter coordinates (X, Y, Z) and teleport to those coordinates.")
+    addArticle(";playerlist - Opens a list of players currently in the server.")
+
+    -- Make the main frame draggable
+    makeDraggable(frame)
+end
+
+-- Function to handle chat commands
+local function onChatted(message)
+    local args = message:split(" ")
+    local command = args[1]:lower()
+
+    if command == ";info" then
+        if not PlayerGui:FindFirstChild("InfoUI") then
+            createInfoUI()
+        end
+        PlayerGui.InfoUI.Enabled = true
+    end
+end
+
+-- Connect chat command function
+Player.Chatted:Connect(onChatted)
+
+-- Ensure the UI persists after death
+Player.CharacterAdded:Connect(function()
+    wait(1) -- Wait for the character to fully load
+    local existingInfoUI = PlayerGui:FindFirstChild("InfoUI")
+    if existingInfoUI then
+        existingInfoUI:Destroy()
+    end
+end)
